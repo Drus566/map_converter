@@ -40,20 +40,9 @@ def getModbusParams(text):
                 func = "16"
             continue
 
-        if (clean_part.startswith("value"))
+        if (clean_part.startswith("value")):
+            value_parts = ""
         
-    
-
-        
-        
-            
-
-
-        
-
-    if (parts[0] == ""):
-        # Точное совпадение
-
 def getTextInParentheses(text):
     """Простая функция для получения текста в первых скобках"""
     if '(' in text and ')' in text:
