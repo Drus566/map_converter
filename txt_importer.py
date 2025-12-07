@@ -1,23 +1,22 @@
 # txt_importer.py
 
-COLUMNS = ['Наименование','Адрес','Бит','Функция','Тип данных','Команда','Примечание']
+# Типы данных Modbus
+TYPES = ["int16", "uint16", "int32", "uint32", "float16", "float32"]
+# Столбцы таблицы
+COLUMNS = ['№', 'Наименование','Адрес','Бит','Функция','Тип данных','Значение для записи','Примечание']
 
 def getModbusParams(text):
     """
     Получение типа данных, функции, команды
-    
     Args:
         text: входная строка
         adr: адрес
-    
     Returns:
         Tuple: (response, data_type, func, command)
     """
 
     data_type = ""
     func = ""
-
-    types = ["int16", "uint16", "int32", "uint32", "float16", "float32"]
 
     parts = text.split(',')
     
@@ -27,7 +26,7 @@ def getModbusParams(text):
     for i, part in enumerate(parts):
         clean_part = part.strip()
         if (i == 0):
-            is_type = [t for t in types if t == part]
+            is_type = [t for t in TYPES if t == part]
             if (not is_type):
                 return (False, 0, 0, 0)
             data_type = clean_part
@@ -55,10 +54,8 @@ def getTextInParentheses(text):
 def checkModbusLine(text):
     """
     Проверяет, является ли первый элемент разбитой строки числом
-    
     Args:
         text: входная строка
-    
     Returns:
         Tuple: (is_number, number_str)
     """
@@ -88,31 +85,32 @@ def checkModbusLine(text):
     
 def importTextData(file_path):
     """
-    Построчно читает текстовый файл и возвращает список обработанных строк.
-    Пример обработанных строк
+    Построчно читает текстовый файл и возвращает список обработанных строк
     data = [
-        ['ОТДЕЛ РАЗРАБОТКИ', '', ''],  # Строка-подзаголовок
-        ['Имя', 'Должность', 'Зарплата'],
-        ['Анна', 'Разработчик', 50000],
-        ['Борис', 'Тестировщик', 45000],
-        ['', '', ''],  # Пустая строка-разделитель
-        ['ОТДЕЛ ПРОДАЖ', '', ''],  # Еще один подзаголовок
-        ['Имя', 'Должность', 'Зарплата'],
-        ['Виктор', 'Менеджер', 60000],
-        ['Дарья', 'Аналитик', 55000],
-        ['', '', ''],  # Еще разделитель
-        ['ОТДЕЛ МАРКЕТИНГА', '', ''],
-        ['Имя', 'Должность', 'Зарплата'],
-        ['Елена', 'Дизайнер', 48000],
-        ['Федор', 'Копирайтер', 42000]
+        ['Наименование','Адрес','Бит','Функция','Тип данных','Значение для записи', 'Примечание'],
+        ['Состояние', '', '', '', '', '', ''],
+        ['Статусы', '', '', '', '', '', ''],
+        ['ЭПУ на резерве',12,2,3,'int16','',''],
+        ['ЭПУ на инверторе',12,3,3,'int16','',''],
+        ['Аварии', '', '', '', '', '', ''],
+        ['Авария инвертора',13,0,3,'int16','',''],
+        ['Выход не в норме',13,1,3,'int16','',''],
+        ['Измерения', '', '', '', '', '', ''],
+        ['Напряжение на инверторе',1122,'',3,'float32','',''],
+        ['Ток инвертора',1124,'',3,'float32','',''],
     ]
     """
-
-    h1 = ""
-    h2 = ""
-    h3 = ""
+    # Счетчик заголовка 1 уровня
+    h1_counter = 1
+    # Счетчик заголовка 2 уровня
+    h2_counter = 1
+    # Счетчик заголовка 3 уровня
+    h3_counter = 1
+    # Область
     area = ""
+    # Началась ли область c Modbus адресами
     modbus = False
+    # Обработанные строки
     processed_lines = []
     
     try:
@@ -125,28 +123,41 @@ def importTextData(file_path):
                     if clean_line == "":
                         continue
 
-                    # Проверка раздела
+                    # Если это Modbus раздел
                     if clean_line.startswith("# " + "Modbus") or clean_line.startswith("# " + "Модбас"):
-                        h1 = "Modbus"
                         modbus = True
                         continue
-                    elif clean_line.startswith("# "):
+                    # Если это не Modbus раздел
+                    elif clean_line.startswith("#"):
                         modbus = False
                         continue
-
+                    # Пропускаем все строки которые не являются Modbus разделом
                     if (modbus == False):
                         continue
 
                     # Проверка заголовка первого уровня
                     if (clean_line.startswith("## ")):
-                        h2 = clean_line[2:].strip()
+                        s_h1 = clean_line[2:].strip()
+                        h1_counter = h1_counter + 1
+                        h2_counter = 1
+                        h3_counter = 1
                         continue
-
                     # Проверка заголовка второго уровня
                     if (clean_line.startswith("### ")):
-                        h3 = clean_line[3:].strip()
+                        s_h2 = clean_line[3:].strip()
+                        h2_counter = h2_counter + 1
+                        h3_counter = 1
                         continue
-                    
+                    # Проверка заголовка третьего уровня
+                    if (clean_line.startswith("#### ")):
+                        s_h3 = clean_line[4:].strip()
+                        h3_counter = h3_counter + 1
+                        continue
+                    # Проверка области
+                    if (clean_line.startswith("*")):
+                        s_area = clean_line[1:].strip()
+                        continue
+
                     # Проверка данных
                     is_number, number_str = checkModbusLine(clean_line)
                     if (not is_number):
@@ -156,15 +167,6 @@ def importTextData(file_path):
 
 
                     # Получение параметров
-                        
-
-
-
-
-
-                        
-
-
                     processed_lines.append(clean_line.upper()) # Пример: перевод в верхний регистр
         
         print(f"✅ Успешно импортировано {len(processed_lines)} строк из {file_path}")
