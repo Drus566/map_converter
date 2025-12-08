@@ -1,9 +1,16 @@
 # txt_importer.py
 
+# Создание столбца нумерации строк
+is_str_num_col = False
+# Счетчик строчек
+str_counter = 1
+
+# Ключевые слова в параметрах
+KEY_VALUES = ["write", "value"]
 # Типы данных Modbus
 TYPES = ["int16", "uint16", "int32", "uint32", "float16", "float32"]
 # Столбцы таблицы
-COLUMNS = ['№', 'Наименование','Адрес','Бит','Функция','Тип данных','Значение для записи','Примечание']
+COLUMNS = ['Наименование','Адрес','Бит','Функция','Тип данных','Значение для записи','Примечание']
 
 def getModbusParams(text):
     """
@@ -43,21 +50,41 @@ def getModbusParams(text):
             value_parts = ""
         
 def getTextInParentheses(text):
-    """Простая функция для получения текста в первых скобках"""
+    """
+    Простая функция для получения текста в первых скобках
+    Args:
+        text: входная строка
+    Returns:
+        Tuple: (is_number, number)
+    """
+    # Примеры
+    # (int16, write 1025) - тип данных и запись по указанному адресу
+    # (int16, write, value 3) - тип данных, запись, и значение для записи
+    # (float32) - тип данных
+    
+    data_types = []
+    params = ''
+
     if '(' in text and ')' in text:
         start = text.find('(')
         end = text.find(')', start)
         if start < end:
-            return text[start + 1:end].strip()
+            params = text[start + 1:end].strip()
+        else:
+            return None
+        
+    if (params == ''):
+        return None
+        
     return None
 
-def checkModbusLine(text):
+def getModbusAdr(text):
     """
     Проверяет, является ли первый элемент разбитой строки числом
     Args:
         text: входная строка
     Returns:
-        Tuple: (is_number, number_str)
+        Tuple: (is_number, str_number)
     """
     parts = text.split()
     
@@ -72,20 +99,45 @@ def checkModbusLine(text):
         
     # Проверка на число с плавающей точкой
     try:
-        float_value = float(first)
-        
+        float_value = str(float(first))
         # Различаем целые и дробные числа
         if '.' in first:
             return True, str(float_value)
         else:
             return True, str(int(float_value))
-            
+        
     except ValueError:
         return False, ""
-    
-def importTextData(file_path):
+
+def addHeader(data, header):
     """
-    Построчно читает текстовый файл и возвращает список обработанных строк
+    Вставляет заголовок
+    Args:
+        data: Данные
+        header: Текст заголовка
+    """
+    new_list = [''] * len(data[0])
+    header_index = 0
+    
+    # Если со столбцом нумерации
+    if (is_str_num_col):
+        header_index = 1
+        new_list[0] = str_counter
+        str_counter = str_counter + 1
+    
+    new_list[header_index] = header
+    data.append(new_list)
+
+def importTextData(file_path, with_num_col=False, with_header_num=False):
+    """
+    Построчно читает текстовый файл и возвращает список обработанных строк и дополнительную информацию о заголовках
+    Args:
+        file_path: путь к файлу
+        with_num_col: с столбцом нумерации строк
+        with_header_num: с нумерацией заголовков
+    Returns:
+        Tuple: (data, info)
+
     data = [
         ['Наименование','Адрес','Бит','Функция','Тип данных','Значение для записи', 'Примечание'],
         ['Состояние', '', '', '', '', '', ''],
@@ -99,6 +151,8 @@ def importTextData(file_path):
         ['Напряжение на инверторе',1122,'',3,'float32','',''],
         ['Ток инвертора',1124,'',3,'float32','',''],
     ]
+
+    info = {'h1':['Состояние'],'h2':['Статусы','Аварии','Измерения']}
     """
     # Счетчик заголовка 1 уровня
     h1_counter = 1
@@ -106,13 +160,21 @@ def importTextData(file_path):
     h2_counter = 1
     # Счетчик заголовка 3 уровня
     h3_counter = 1
-    # Область
-    area = ""
     # Началась ли область c Modbus адресами
     modbus = False
-    # Обработанные строки
-    processed_lines = []
-    
+
+    # Обработка аргументов
+    is_str_num_col = with_num_col
+    columns = COLUMNS
+    if (is_str_num_col):
+        # Добавляем столбец '№' в начало
+        columns.insert(0,'№')
+
+    # Обработанные строки (Результат)
+    data = [columns]
+    # Дополнительная информация
+    info = {'h1':[],'h2':[],'h3':[],'area':[]}
+
     try:
         # Используем кодировку UTF-8 для широкой поддержки символов
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -138,28 +200,45 @@ def importTextData(file_path):
                     # Проверка заголовка первого уровня
                     if (clean_line.startswith("## ")):
                         s_h1 = clean_line[2:].strip()
-                        h1_counter = h1_counter + 1
-                        h2_counter = 1
-                        h3_counter = 1
+                        if (with_header_num):
+                            s_h1 = str(h1_counter) + '. ' + s_h1
+                            h1_counter = h1_counter + 1
+                            h2_counter = 1
+                            h3_counter = 1
+                        info["h1"].append(s_h1)
+                        addHeader(data, s_h1)
                         continue
                     # Проверка заголовка второго уровня
                     if (clean_line.startswith("### ")):
                         s_h2 = clean_line[3:].strip()
-                        h2_counter = h2_counter + 1
-                        h3_counter = 1
+                        if (with_header_num):
+                            s_h2 = str(h1_counter) + "." + str(h2_counter) + " " + s_h2
+                            h2_counter = h2_counter + 1
+                            h3_counter = 1
+                        info["h2"].append(s_h2)
+                        addHeader(data, s_h2)
                         continue
                     # Проверка заголовка третьего уровня
                     if (clean_line.startswith("#### ")):
                         s_h3 = clean_line[4:].strip()
-                        h3_counter = h3_counter + 1
+                        if (with_header_num):
+                            s_h3 = str(h1_counter) + "." + str(h2_counter) + "." + str(h3_counter) + " " + s_h3
+                            h3_counter = h3_counter + 1
+                        info["h3"].append(s_h3)
+                        addHeader(data, s_h3)
                         continue
                     # Проверка области
                     if (clean_line.startswith("*")):
-                        s_area = clean_line[1:].strip()
+                        lst = clean_line.split("*")
+                        if (lst == 0):
+                           continue 
+                        s_area = lst[1]
+                        info["area"].append(s_area)
+                        addHeader(data, s_area)
                         continue
 
                     # Проверка данных
-                    is_number, number_str = checkModbusLine(clean_line)
+                    is_number, number_str = getModbusAdr(clean_line)
                     if (not is_number):
                         continue
 
@@ -167,17 +246,17 @@ def importTextData(file_path):
 
 
                     # Получение параметров
-                    processed_lines.append(clean_line.upper()) # Пример: перевод в верхний регистр
+                    data.append(clean_line.upper()) # Пример: перевод в верхний регистр
         
-        print(f"✅ Успешно импортировано {len(processed_lines)} строк из {file_path}")
-        return processed_lines
+        print(f"✅ Успешно импортировано {len(data)} строк из {file_path}")
+        return data, info
         
     except FileNotFoundError:
         print(f"❌ Ошибка: Файл не найден по пути: {file_path}")
-        return None
+        return None, None
     except Exception as e:
         print(f"❌ Произошла ошибка при чтении файла: {e}")
-        return None
+        return None, None
 
 # Пример: если этот файл запустить напрямую, он не сделает ничего, 
 # так как его задача - быть импортированным.
