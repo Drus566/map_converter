@@ -237,7 +237,7 @@ def importTextData(file_path, with_num_col=False, with_header_num=False):
                         addHeader(data, s_area)
                         continue
 
-                    # Проверка данных
+                    # Проверка данных, если вначале модбас адрес, то предположительно это модбас строка
                     is_number, number_str = getModbusAdr(clean_line)
                     if (not is_number):
                         continue
