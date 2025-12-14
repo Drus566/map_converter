@@ -38,6 +38,12 @@ STATE = {
     'modbus': False,
 }
 
+def main():
+    INPUT_FILENAME = 'source_data.txt'
+    processFile(INPUT_FILENAME)
+    print(ALL_DATA)
+    print('main')
+
 def processFile(filename):
     with open(filename, 'r', encoding='utf-8') as file:
         for num_line, line in enumerate(file, start=1):
@@ -72,7 +78,6 @@ def processFile(filename):
                     data = parseData(line, num_line)
                     if (data != None):
                         DATA.append(data)
-    return ALL_DATA
 
 def getArea(line):
     start = line.find('*')
@@ -203,3 +208,14 @@ def getNumberType(line):
             return NumberType.FLOAT
         except ValueError:
             return None
+
+def parseLine():
+    print('parse line')
+
+def getAdr():
+    print('get adr')
+    
+def getParams():
+    print('get params')
+
+main()

@@ -2,32 +2,36 @@
 import sys
 
 # Импортируем функции из других модулей
-from txt_importer import import_text_data
-from pdf_exporter import export_to_pdf
-from excel_exporter import export_to_excel
+from txt_importer import processFile
+# from pdf_exporter import export_to_pdf
+# from excel_exporter import export_to_excel
 
 # Имя файла, который мы будем импортировать
 INPUT_FILE = "source_data.txt"
 
 def main():
+    data = processFile(INPUT_FILE)
+    print(data)
+    print('main')
+
     print("--- Запуск Проекта Экспорта ---")
     
-    # 1. Импорт и обработка данных
-    data = import_text_data(INPUT_FILE)
+    # # 1. Импорт и обработка данных
+    # data = import_text_data(INPUT_FILE)
     
-    if data is None or not data:
-        print("\n🚫 Процесс остановлен из-за отсутствия или ошибки в данных.")
-        return
+    # if data is None or not data:
+    #     print("\n🚫 Процесс остановлен из-за отсутствия или ошибки в данных.")
+    #     return
         
-    print(f"\nДанные готовы к экспорту ({len(data)} элементов).")
+    # print(f"\nДанные готовы к экспорту ({len(data)} элементов).")
     
-    # 2. Экспорт данных в PDF
-    export_to_pdf(data, output_filename="Report_Data.pdf")
+    # # 2. Экспорт данных в PDF
+    # export_to_pdf(data, output_filename="Report_Data.pdf")
     
-    # 3. Экспорт данных в Excel
-    export_to_excel(data, output_filename="Report_Data.xlsx")
+    # # 3. Экспорт данных в Excel
+    # export_to_excel(data, output_filename="Report_Data.xlsx")
     
-    print("\n--- Работа завершена ---")
+    # print("\n--- Работа завершена ---")
     
 
 def analyze_environment():

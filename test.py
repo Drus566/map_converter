@@ -3,11 +3,16 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-def center_column(ws, column, horizontal='center', vertical='center', 
+# Определяем критерии для подзаголовков
+SUBHEADERS = ['Состояние', 'Статусы', 'Аварии', 'Измерения']
+
+def main():
+    print('main')
+
+# Центрирует указанный столбец в excel
+def excelCenteringColumn(ws, column, horizontal='center', vertical='center', 
                  wrap_text=False, start_row=1, end_row=None):
     """
-    Центрирует указанный столбец
-    
     Args:
         ws: рабочий лист
         column: столбец (буква или номер)
@@ -36,11 +41,11 @@ def center_column(ws, column, horizontal='center', vertical='center',
     
     # Применяем ко всем ячейкам в столбце
     for row in range(start_row, end_row + 1):
-        cell = ws.cell(row=row, column=getColumnLetterIndex(col_letter))
+        cell = ws.cell(row=row, column=excelGetColumnLetterIndex(col_letter))
         cell.alignment = alignment
 
-def getColumnLetterIndex(col_letter):
-    """Преобразует букву столбца в номер"""
+# Преобразует букву столбца в номер
+def excelGetColumnLetterIndex(col_letter):
     from openpyxl.utils import column_index_from_string
     return column_index_from_string(col_letter)
 
@@ -97,24 +102,21 @@ ws.column_dimensions['G'].width = 10
 ws.column_dimensions['H'].width = 50
 
 # Центрируем разные столбцы по-разному
-center_column(ws, 'A', horizontal='center')
-center_column(ws, 'B', horizontal='left', vertical='center', wrap_text=True, start_row=2) 
-center_column(ws, 'B', horizontal='center', vertical='center', wrap_text=True, end_row=1)
-center_column(ws, 'C', horizontal='center', vertical='center', wrap_text=True)
-center_column(ws, 'D', horizontal='center', vertical='center', wrap_text=True)
-center_column(ws, 'E', horizontal='center', vertical='center', wrap_text=True)
-center_column(ws, 'F', horizontal='center', vertical='center', wrap_text=True)
-center_column(ws, 'G', horizontal='center', vertical='center', wrap_text=True)
-center_column(ws, 'H', horizontal='left', vertical='center', wrap_text=True, start_row=2)
-center_column(ws, 'H', horizontal='center', vertical='center', wrap_text=True, end_row=1)
-
-# Определяем критерии для подзаголовков
-subheader_keywords = ['Состояние', 'Статусы', 'Аварии', 'Измерения']
+excelCenteringColumn(ws, 'A', horizontal='center')
+excelCenteringColumn(ws, 'B', horizontal='left', vertical='center', wrap_text=True, start_row=2) 
+excelCenteringColumn(ws, 'B', horizontal='center', vertical='center', wrap_text=True, end_row=1)
+excelCenteringColumn(ws, 'C', horizontal='center', vertical='center', wrap_text=True)
+excelCenteringColumn(ws, 'D', horizontal='center', vertical='center', wrap_text=True)
+excelCenteringColumn(ws, 'E', horizontal='center', vertical='center', wrap_text=True)
+excelCenteringColumn(ws, 'F', horizontal='center', vertical='center', wrap_text=True)
+excelCenteringColumn(ws, 'G', horizontal='center', vertical='center', wrap_text=True)
+excelCenteringColumn(ws, 'H', horizontal='left', vertical='center', wrap_text=True, start_row=2)
+excelCenteringColumn(ws, 'H', horizontal='center', vertical='center', wrap_text=True, end_row=1)
 
 for row in range(1, ws.max_row + 1):
     cell_value = ws.cell(row=row, column=2).value
     print(cell_value)
-    if cell_value and any(keyword in str(cell_value) for keyword in subheader_keywords):
+    if cell_value and any(keyword in str(cell_value) for keyword in SUBHEADERS):
         # Объединяем все ячейки в строке
         ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=ws.max_column)
         
