@@ -39,7 +39,7 @@ STATE = {
 }
 
 def main():
-    INPUT_FILENAME = 'source_data.txt'
+    INPUT_FILENAME = 'new_source_data.txt'
     processFile(INPUT_FILENAME)
     print(ALL_DATA)
     print('main')
@@ -48,32 +48,34 @@ def processFile(filename):
     with open(filename, 'r', encoding='utf-8') as file:
         for num_line, line in enumerate(file, start=1):
             line = line.strip()
+            if len(line) == 0 or line.startswith('//'):
+                continue
             if (line.startswith(HEADERS['h1'])):
                 is_modbus = True if isModbusHeader(line) else False
                 STATE['modbus'] = is_modbus
             elif STATE['modbus']:
                 print(line)
                 if (line.startswith(HEADERS['h2'])):
-                    DATA_HEADERS[num_line] = 1
                     header = line[2:].strip()
                     header_list = getHeaderList(header)
                     DATA.append(header_list)
+                    DATA_HEADERS[len(DATA) - 1] = 1
                 elif (line.startswith(HEADERS['h3'])):
-                    DATA_HEADERS[num_line] = 2
                     header = line[3:].strip()
                     header_list = getHeaderList(header)
                     DATA.append(header_list)
+                    DATA_HEADERS[len(DATA) - 1] = 2
                 elif (line.startswith(HEADERS['h4'])):
-                    DATA_HEADERS[num_line] = 3
                     header = line[4:].strip()
                     header_list = getHeaderList(header)
                     DATA.append(header_list)
+                    DATA_HEADERS[len(DATA) - 1] = 3
                 elif (line.startswith('*')):
                     area = getArea(line)
                     if area != None:
-                        DATA_HEADERS[num_line] = 4
                         header_list = getHeaderList(area)
                         DATA.append(header_list)
+                        DATA_HEADERS[len(DATA) - 1] = 4
                 else:
                     data = parseData(line, num_line)
                     if (data != None):
