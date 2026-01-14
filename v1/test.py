@@ -2,7 +2,7 @@
 import ast
 import os
 
-def find_imports(file_path):
+def findImports(file_path):
     """Находит все импорты в Python файле"""
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -29,5 +29,5 @@ def find_imports(file_path):
     return imports
 
 # Пример использования
-imports = find_imports('test.py')
+imports = findImports('test.py')
 print("Используемые модули:", imports)

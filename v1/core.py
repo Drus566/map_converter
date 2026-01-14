@@ -1,5 +1,6 @@
-# main.py
-import sys
+import tkinter as tk
+
+import ui.windows.txt_import as txt_import
 
 # Импортируем функции из других модулей
 # from txt_importer import processFile
@@ -39,8 +40,20 @@ SETTINGS = {
    'export_excel_col_iec61850_adr_dataset': 4,
    'export_excel_col_iec61850_adr_report': 4,
    'export_excel_col_iec61850_adr_buf_report': 4,
-
 }
+
+# Данные о строках в которых хранятся заголовки (№ строки, Уровень заголовка)
+METADATA = {}
+# Набор стандартных столбцов
+CORE_COLS = ['Наименование','Адрес','Бит','Функция','Тип данных','Примечание']
+# Полезные данные
+PAYLOAD = [CORE_COLS]
+
+# Основные данные
+DATA = [
+   PAYLOAD,
+   METADATA,
+]
 
 # Состояние программы
 STATE = {
@@ -49,7 +62,18 @@ STATE = {
 }
 
 def start():
+   print("--- 🐍 Core start ---")
+   root = tk.Tk()
+   root.title("Компонент PathInput - Демонстрация")
+   root.geometry("700x600")
+   
+   app = txt_import.FileManagerApp(root)
+   app.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+    
+   root.mainloop()
+
    pass
+
    #  data = processFile(INPUT_FILE)
    #  print(data)
    #  print('main')
@@ -73,31 +97,3 @@ def start():
     
     # print("\n--- Работа завершена ---")
     
-
-def analyze_environment():
-    """Выводит используемую версию Python и список установленных пакетов, 
-    используя современный API (Python 3.10+)."""
-    
-    print("--- 🐍 Среда выполнения ---")
-    print(f"✅ Используемая версия Python: {sys.version.split()[0]}")
-    print("----------------------------")
-    
-   #  print("\n--- 📦 Установленные библиотеки (Пакеты) ---")
-   #  print("FPDF, openpyxl, pandas")
-
-if __name__ == '__main__':
-    analyze_environment()
-    main()
-    # Для теста, создадим фиктивный исходный файл, если его нет
-    # try:
-    #     with open(INPUT_FILE, 'w', encoding='utf-8') as f:
-    #         f.write("Первая строка\n")
-    #         f.write("Вторая строка с данными\n")
-    #         f.write("Третья\n")
-    #         f.write(" ") # Пустая строка, которую обработает importer
-    #         f.write("Четвертая, последняя.\n")
-    #     print(f"Создан тестовый файл: {INPUT_FILE}")
-    # except Exception:
-    #     pass # Игнорируем ошибку при создании тестового файла
-        
-    # main()
